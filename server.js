@@ -1,5 +1,8 @@
 const express = require('express');
 const app = express();
+const bcrypt = require('bcrypt');
+
+app.use(express.json());
 
 const users = [
 ];
@@ -8,17 +11,24 @@ app.get('/users', (req, res) => {
     res.json([users]);
 });
 
-app.post('/users', (req, res) => {
+app.post('/users', async (req, res) => {
 
-    const user = {name: req.body.name, pass: req.body.pass};
+    try{
+        const salt = await bcrypt.genSalt();
 
-    users.push(user);
+        const hashedPassword = await bcrypt.hash(req.body.pass, salt);
 
-    res.status(201).json({
-        message: 'Handling POST requests to /users',
-    });
+        const user = {name: req.body.name, pass: hashedPassword};
 
-    // res.status(201).send('User added')
+        users.push(user);
+    
+        res.status(201).json({
+            message: 'User was added successfully!',
+        });
+    } catch {
+        res.status(500).send("Error");
+    }
+
 });
 
 app.listen(3000, () => console.log('Server running on port 3000'));
